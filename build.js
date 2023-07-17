@@ -71,7 +71,7 @@ async function main() {
             schedule[date.getDay()].push(anime);
         });
 
-        await fs.writeFile(`./public/data+${zone}.json`, JSON.stringify({ schedule }));
+        await fs.writeFile(`./public/data_${zone}.json`, JSON.stringify({ schedule }));
     }
 }
 
