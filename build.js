@@ -6,12 +6,12 @@ async function main() {
     query (
         $page: Int, $perPage: Int, $season: MediaSeason, $seasonYear: Int, $status: MediaStatus
     ) {
-        Page(page: $page, perPage: $perPage) {
+        data: Page(page: $page, perPage: $perPage) {
             pageInfo {
                 total
                 perPage
             }
-            media(
+            animes: media(
                 type: ANIME, sort: FAVOURITES_DESC, season: $season, seasonYear: $seasonYear, status: $status,
                 isAdult: false,
             ) {
@@ -42,15 +42,22 @@ async function main() {
         status: 'RELEASING',
     };
 
+    const schedule = [[], [], [], [], [], [], []];
+
     const res = await got
         .post('https://graphql.anilist.co', {
             json: { query, variables },
         })
         .json();
 
-    console.log(res.data.Page.media);
+    res.data.data.animes.forEach(anime => {
+        if (!anime.nextAiringEpisode) return;
+        const date = new Date(0);
+        date.setUTCSeconds(anime.nextAiringEpisode.airingAt);
+        schedule[date.getDay()].push(anime);
+    });
 
-    await fs.writeFile('./public/data.json', JSON.stringify(res.data.Page.media));
+    await fs.writeFile('./public/data.json', JSON.stringify({ schedule }));
 }
 
 main();
