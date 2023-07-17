@@ -1,5 +1,6 @@
 const fs = require('fs/promises');
 const got = require('got');
+const { zones } = require('./config');
 
 async function main() {
     const query = `
@@ -50,14 +51,17 @@ async function main() {
         })
         .json();
 
-    res.data.data.animes.forEach(anime => {
-        if (!anime.nextAiringEpisode) return;
-        const date = new Date(0);
-        date.setUTCSeconds(anime.nextAiringEpisode.airingAt);
-        schedule[date.getDay()].push(anime);
-    });
+    for (const zone of zones) {
+        res.data.data.animes.forEach(anime => {
+            if (!anime.nextAiringEpisode) return;
+            const date = new Date(0);
+            date.setUTCSeconds(anime.nextAiringEpisode.airingAt);
+            date.setHours(date.getHours() + zone);
+            schedule[date.getDay()].push(anime);
+        });
 
-    await fs.writeFile('./public/data.json', JSON.stringify({ schedule }));
+        await fs.writeFile(`./public/data+${zone}.json`, JSON.stringify({ schedule }));
+    }
 }
 
 main();
