@@ -4,6 +4,7 @@
     "build": "node ./build.js"
   },
   "devDependencies": {
-    "@vercel/node": "^2.15.5"
+    "@vercel/node": "^2.15.5",
+    "got": "^11.8.6"
   }
 }
