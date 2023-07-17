@@ -5,7 +5,7 @@ const { zones } = require('./config');
 async function main() {
     const query = `
     query (
-        $page: Int, $perPage: Int, $season: MediaSeason, $seasonYear: Int, $status: MediaStatus
+        $page: Int, $perPage: Int, 
     ) {
         data: Page(page: $page, perPage: $perPage) {
             pageInfo {
@@ -13,7 +13,9 @@ async function main() {
                 perPage
             }
             animes: media(
-                type: ANIME, sort: FAVOURITES_DESC, season: $season, seasonYear: $seasonYear, status: $status,
+                type: ANIME,
+                format_in: [TV],
+                status: RELEASING,
                 isAdult: false,
             ) {
                 id
@@ -36,23 +38,32 @@ async function main() {
             }
         }
     }`;
-    const variables = {
-        page: 1,
-        season: 'SUMMER',
-        seasonYear: 2023,
-        status: 'RELEASING',
-    };
 
-    const schedule = [[], [], [], [], [], [], []];
+    const animes = [];
 
-    const res = await got
-        .post('https://graphql.anilist.co', {
-            json: { query, variables },
-        })
-        .json();
+    let page = 1;
+
+    while (true) {
+        const res = await got
+            .post('https://graphql.anilist.co', {
+                json: {
+                    query,
+                    variables: {
+                        page,
+                        status: 'RELEASING',
+                    },
+                },
+            })
+            .json();
+        animes.push(...res.data.data.animes);
+        if (res.data.data.animes.length < 50) break;
+        page++;
+    }
 
     for (const zone of zones) {
-        res.data.data.animes.forEach(anime => {
+        const schedule = [[], [], [], [], [], [], []];
+
+        animes.forEach(anime => {
             if (!anime.nextAiringEpisode) return;
             const date = new Date(0);
             date.setUTCSeconds(anime.nextAiringEpisode.airingAt);
