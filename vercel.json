@@ -1,5 +1,5 @@
 {
     "routes": [
-        { "src": "/", "dest": "/data0.json" }
+        { "src": "/", "dest": "/data_0.json" }
     ]
 }
